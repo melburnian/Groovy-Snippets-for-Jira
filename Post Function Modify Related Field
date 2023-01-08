@@ -1,0 +1,51 @@
+/** 
+* Updates value in field B based on value passed to field A 
+* triggered upon issue creation within the specified project.
+**/
+
+// These lines of code import various classes that are needed for the script to function. 
+// The ComponentAccessor class is a utility class that provides access to various Jira components, such as the CustomFieldManager. 
+// The IssueEvent class represents an event that occurs in Jira related to an issue, such as the creation of an issue or an update to an issue. 
+// The EventType class defines constants for the different types of events that can occur in Jira. 
+// The CustomFieldManager class provides methods for managing custom fields in Jira, and the CustomField class represents a custom field in Jira.
+
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.event.issue.IssueEvent
+import com.atlassian.jira.event.type.EventType
+import com.atlassian.jira.issue.CustomFieldManager
+import com.atlassian.jira.issue.fields.CustomField
+
+def customFieldManager = ComponentAccessor.customFieldManager
+def serviceTypeField = customFieldManager.getCustomFieldObjectByName("Service Type")
+def requestTypeField = customFieldManager.getCustomFieldObjectByName("Request Type")
+
+// These lines of code create instances of the IssueEvent and Issue classes. 
+// The issueEvent variable is initialized with the value of the event parameter, which is passed to the script by Jira when the event occurs. 
+// The issue variable is initialized with the Issue object associated with the IssueEvent, which is obtained using the issue property of the IssueEvent object.
+
+def issueEvent = event as IssueEvent
+def issue = issueEvent.issue
+
+// This code is executed if the event type is an issue creation event. 
+// It gets the values of the "Service Type" and "Request Type" fields for the issue, and then checks the value of the "Service Type" field. 
+// If the value is "Orange", it sets the value of the "Request Type" field to "Fruit". 
+// If the value is "Apple", it also sets the value of the "Request Type" field to "Fruit". 
+// If the value is "Carrot", it sets the value of the "Request Type" field to "Vegetable".
+
+if (issue.projectObject.key == "Fruit Store" && issue.getIssueType().name == "activity") {
+  if (issueEvent.eventTypeId == EventType.ISSUE_CREATED_ID) {
+    def serviceTypeValue = issue.getCustomFieldValue(serviceTypeField)
+    def requestTypeValue = issue.getCustomFieldValue(requestTypeField)
+    
+    if (serviceTypeValue == "Orange") {
+      issue.setCustomFieldValue(requestTypeField, "Fruit")
+    }
+    else if (serviceTypeValue == "Apple") {
+      issue.setCustomFieldValue(requestTypeField, "Fruit")
+    }
+    else if (serviceTypeValue == "Carrot") {
+      issue.setCustomFieldValue(requestTypeField, "Vegetable")
+    }
+  }
+}
+
