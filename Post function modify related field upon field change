@@ -1,0 +1,33 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.event.issue.IssueEvent
+import com.atlassian.jira.event.type.EventType
+import com.atlassian.jira.issue.CustomFieldManager
+import com.atlassian.jira.issue.fields.CustomField
+
+def customFieldManager = ComponentAccessor.customFieldManager
+def serviceTypeField = customFieldManager.getCustomFieldObjectByName("Service Type")
+def requestTypeField = customFieldManager.getCustomFieldObjectByName("Request Type")
+
+def issueEvent = event as IssueEvent
+def issue = issueEvent.issue
+
+if (issue.projectObject.key == "Fruit Shop" && issue.getIssueType().name == "Activity") {
+  def changeLog = issueEvent.getChangeLog()
+  if (changeLog) {
+    def changeItems = changeLog.getRelated("ChildChangeItem")
+    if (changeItems.find { it.field == "Service Type" }) {
+      def serviceTypeValue = issue.getCustomFieldValue(serviceTypeField)
+      def requestTypeValue = issue.getCustomFieldValue(requestTypeField)
+
+      if (serviceTypeValue == "Orange") {
+        issue.setCustomFieldValue(requestTypeField, "Fruit")
+      }
+      else if (serviceTypeValue == "Apple") {
+        issue.setCustomFieldValue(requestTypeField, "Fruit")
+      }
+      else if (serviceTypeValue == "Carrot") {
+        issue.setCustomFieldValue(requestTypeField, "Vegetable")
+      }
+    }
+  }
+}
