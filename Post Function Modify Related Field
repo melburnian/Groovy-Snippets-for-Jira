@@ -1,3 +1,13 @@
+
+
+
+
+
+
+
+
+
+
 /** 
 * Updates value in field B based on value passed to field A 
 * triggered upon issue creation within the specified project.
@@ -26,26 +36,32 @@ def requestTypeField = customFieldManager.getCustomFieldObjectByName("Request Ty
 def issueEvent = event as IssueEvent
 def issue = issueEvent.issue
 
-// This code is executed if the event type is an issue creation event. 
-// It gets the values of the "Service Type" and "Request Type" fields for the issue, and then checks the value of the "Service Type" field. 
-// If the value is "Orange", it sets the value of the "Request Type" field to "Fruit". 
-// If the value is "Apple", it also sets the value of the "Request Type" field to "Fruit". 
-// If the value is "Carrot", it sets the value of the "Request Type" field to "Vegetable".
+// This block of code is executed if the issue event has a change log, which is checked using the changeLog variable. 
+// If the change log exists, the code retrieves the change items in the log using the getRelated() method of the ChangeLog class, 
+// which takes a relationship name as an argument and returns a list of ChangeItem objects that have that relationship with the change log.
 
-if (issue.projectObject.key == "Fruit Store" && issue.getIssueType().name == "activity") {
-  if (issueEvent.eventTypeId == EventType.ISSUE_CREATED_ID) {
-    def serviceTypeValue = issue.getCustomFieldValue(serviceTypeField)
-    def requestTypeValue = issue.getCustomFieldValue(requestTypeField)
-    
-    if (serviceTypeValue == "Orange") {
-      issue.setCustomFieldValue(requestTypeField, "Fruit")
-    }
-    else if (serviceTypeValue == "Apple") {
-      issue.setCustomFieldValue(requestTypeField, "Fruit")
-    }
-    else if (serviceTypeValue == "Carrot") {
-      issue.setCustomFieldValue(requestTypeField, "Vegetable")
+// The code then checks if the list of change items contains an item with a field name of "Service Type" using the find() method of the List class, 
+// which takes a closure as an argument and returns the first element in the list for which the closure returns true. 
+// If an item with a field name of "Service Type" is found, the code retrieves the values of the "Service Type" and "Request Type" fields 
+// and sets the value of the "Request Type" field based on the mapping logic specified in the previous versions of the script.
+
+if (issue.projectObject.key == "Fruit Shop" && issue.getIssueType().name == "Activity") {
+  def changeLog = issueEvent.getChangeLog()
+  if (changeLog) {
+    def changeItems = changeLog.getRelated("ChildChangeItem")
+    if (changeItems.find { it.field == "Service Type" }) {
+      def serviceTypeValue = issue.getCustomFieldValue(serviceTypeField)
+      def requestTypeValue = issue.getCustomFieldValue(requestTypeField)
+
+      if (serviceTypeValue == "Orange") {
+        issue.setCustomFieldValue(requestTypeField, "Fruit")
+      }
+      else if (serviceTypeValue == "Apple") {
+        issue.setCustomFieldValue(requestTypeField, "Fruit")
+      }
+      else if (serviceTypeValue == "Carrot") {
+        issue.setCustomFieldValue(requestTypeField, "Vegetable")
+      }
     }
   }
 }
-
