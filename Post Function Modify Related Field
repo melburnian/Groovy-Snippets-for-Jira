@@ -1,16 +1,7 @@
 
-
-
-
-
-
-
-
-
-
 /** 
 * Updates value in field B based on value passed to field A 
-* triggered upon issue creation within the specified project.
+* triggered upon a change of the Service Type field within the specified project.
 **/
 
 // These lines of code import various classes that are needed for the script to function. 
