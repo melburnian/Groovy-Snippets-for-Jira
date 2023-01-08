@@ -1,0 +1,31 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.event.issue.IssueEvent
+import com.atlassian.jira.issue.CustomFieldManager
+import com.atlassian.jira.issue.fields.CustomField
+import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.web.action.JiraWebActionSupport
+
+def customFieldManager = ComponentAccessor.customFieldManager
+def serviceTypeField = customFieldManager.getCustomFieldObjectByName("Service Type")
+def requestTypeField = customFieldManager.getCustomFieldObjectByName("Request Type")
+
+def issueEvent = event as IssueEvent
+def issue = issueEvent.issue
+def serviceTypeValue = issue.getCustomFieldValue(serviceTypeField)
+def requestTypeValue = issue.getCustomFieldValue(requestTypeField)
+
+if (serviceTypeValue != "Orange" && serviceTypeValue != "Apple" && serviceTypeValue != "Carrot") {
+  def user = issueEvent.user
+  def action = new JiraWebActionSupport()
+  action.addErrorMessage("Error: Service Type must be 'Orange', 'Apple', or 'Carrot' to update the Request Type field.")
+  return false
+}
+
+if (requestTypeValue != "Fruit" && requestTypeValue != "Vegetable") {
+  def user = issueEvent.user
+  def action = new JiraWebActionSupport()
+  action.addErrorMessage("Error: Request Type must be 'Fruit' or 'Vegetable' based on the value of the Service Type field.")
+  return false
+}
+
+return true
