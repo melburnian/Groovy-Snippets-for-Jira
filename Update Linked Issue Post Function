@@ -1,0 +1,17 @@
+/**
+* Updates liked issue where link type is of a specific type.
+**/
+
+import com.atlassian.jira.component.ComponentAccessor
+
+def issueLinkManager = ComponentAccessor.getIssueLinkManager()
+def linkedIssues = issueLinkManager.getOutwardLinks(issue.id)
+
+linkedIssues.each { linkedIssue ->
+    if (linkedIssue.issueLinkType.name == "Depends on") {
+        def linkedIssueObject = linkedIssue.destinationObject
+        if (linkedIssueObject.status.name == "Done") {
+            linkedIssueObject.setStatus("In Progress")
+        }
+    }
+}
