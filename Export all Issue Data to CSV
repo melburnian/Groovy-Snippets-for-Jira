@@ -1,0 +1,87 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.issue.IssueManager
+import com.atlassian.jira.issue.comments.CommentManager
+import com.atlassian.jira.project.Project
+import com.atlassian.jira.project.ProjectManager
+import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.user.UserManager
+import com.opencsv.CSVWriter
+import org.apache.commons.lang.StringUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+def log = LoggerFactory.getLogger("Export Data Script")
+def issueManager = ComponentAccessor.issueManager
+def projectManager = ComponentAccessor.projectManager
+def userManager = ComponentAccessor.userManager
+def commentManager = ComponentAccessor.getCommentManager()
+
+// Replace PROJECT_KEY with the key of the project for which you want to export data
+def projectKey = "PROJECT_KEY"
+def project = projectManager.getProjectByCurrentKey(projectKey)
+
+if (project == null) {
+    log.error("Error: Project with key '${projectKey}' not found.")
+    return
+}
+
+def csvFile = new File("export.csv")
+def csvWriter = new CSVWriter(new FileWriter(csvFile))
+
+// Add a header row to the CSV
+def headerRow = ["Summary", "Description", "Assignee", "Reporter", "Status", "Comments"]
+csvWriter.writeNext(headerRow)
+
+def issues = issueManager.getIssueObjects(project.getId())
+
+// Iterate through all issues in the project
+for (Issue issue : issues) {
+    def row = []
+
+    // Add the summary and description of the issue
+    row << issue.summary << issue.description
+
+    // Add the assignee and reporter of the issue
+    def assignee = issue.assignee
+    def reporter = issue.reporter
+    if (assignee != null) {
+        row << assignee.displayName
+    } else {
+        row << ""
+    }
+    if (reporter != null) {
+        row << reporter.displayName
+    } else {
+        row << ""
+    }
+
+    // Add the status of the issue
+    row << issue.status.name
+
+    // Add the comments on the issue
+    def comments = commentManager.getComments(issue)
+    def commentString = ""
+    if (comments.size() > 0) {
+        for (Comment comment : comments) {
+            def author = comment.author
+            def body = comment.body
+            if (author != null && body != null) {
+                commentString += "${author.displayName}: ${body}\n"
+            }
+        }
+    }
+    row << commentString
+
+    // Add the data for this issue to the CSV
+    csvWriter.writeNext(row)
+}
+
+csvWriter.close()
+
+// Attach the CSV file to the issue
+def issueId = issue.id
+def attachmentManager = ComponentAccessor.getAttachmentManager()
+def attachment = new FileInputStream(csvFile)
+attachmentManager.createAttachment(attachment, csvFile.name, issueId)
+
